@@ -20,13 +20,7 @@ export default function NoteEditor() {
     if (title.trim() !== "" || body.trim() !== "") {
       navigation.setOptions({
         headerRight: () => (
-          <Pressable
-            onPress={() => {
-              console.log("Note saved:", { title, body });
-              navigation.goBack();
-            }}
-            style={{ marginRight: 10 }}
-          >
+          <Pressable onPress={handleSave} style={{ marginRight: 10 }}>
             <Text
               style={{ color: colors.primary, fontSize: 16, fontWeight: "600" }}
             >
