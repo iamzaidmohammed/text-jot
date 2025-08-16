@@ -1,30 +1,35 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Stack, useRouter } from "expo-router";
-import { FlatList, Pressable, StyleSheet, View } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { useCallback, useState } from "react";
+import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import FloatingButton from "../components/FloatingButton";
 import NotesItem from "../components/NotesItems";
 import SearchBar from "../components/SearchBar";
+import { getNotes } from "../database/queries";
 import { useThemeColors } from "../theme";
 
 export default function NotesScreen() {
   const colors = useThemeColors();
-  // const navigation = useNavigation();
   const router = useRouter();
+  const { folderId } = useLocalSearchParams();
+  const [notes, setNotes] = useState([]);
 
-  const notes = [
-    {
-      id: "1",
-      title: "Shopping List",
-      preview: "Eggs, Milk, Bread",
-      date: "Today",
-    },
-    {
-      id: "2",
-      title: "Meeting Notes",
-      preview: "Discuss project roadmap",
-      date: "Yesterday",
-    },
-  ];
+  const loadNotes = useCallback(async () => {
+    if (!folderId) return;
+    try {
+      const result = await getNotes(folderId);
+      setNotes(result);
+    } catch (error) {
+      console.error("Error loading notes:", error);
+    }
+  }, [folderId]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadNotes();
+    }, [loadNotes])
+  );
 
   return (
     <>
@@ -37,7 +42,6 @@ export default function NotesScreen() {
                 marginRight: 20,
                 marginTop: 15,
               }}
-              // hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
               <Ionicons name="settings-outline" size={28} color={colors.text} />
             </Pressable>
@@ -46,21 +50,33 @@ export default function NotesScreen() {
       />
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <SearchBar placeholder="Search notes..." />
-        <FlatList
-          data={notes}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <NotesItem
-              title={item.title}
-              preview={item.preview}
-              date={item.date}
-            />
-          )}
-          contentInsetAdjustmentBehavior="automatic"
-          contentContainerStyle={{ paddingHorizontal: 20 }}
-        />
+        {notes.length < 1 ? (
+          <Text
+            style={{ color: colors.text, textAlign: "center", marginTop: 20 }}
+          >
+            No notes found in this {folderId}. Create one to get started!
+          </Text>
+        ) : (
+          <FlatList
+            data={notes}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <NotesItem
+                id={item.id}
+                title={item.title}
+                preview={item.body}
+                folderId={folderId}
+                date={new Date(item.date_edited).toLocaleDateString()}
+              />
+            )}
+            contentContainerStyle={{ paddingHorizontal: 20 }}
+          />
+        )}
 
-        <FloatingButton icon="create-outline" navigateTo="/note-editor" />
+        <FloatingButton
+          icon="create-outline"
+          navigateTo={`/note-editor?folderId=${folderId}`}
+        />
       </View>
     </>
   );
@@ -68,5 +84,4 @@ export default function NotesScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, paddingTop: 150 },
-  title: { fontSize: 20, color: "#fff" },
 });

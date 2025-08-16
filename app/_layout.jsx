@@ -1,56 +1,61 @@
-import { Ionicons } from "@expo/vector-icons";
-import { Stack, useRouter } from "expo-router";
-import { Pressable, useColorScheme } from "react-native";
+import { Stack } from "expo-router";
+import { useEffect, useState } from "react";
+import { ActivityIndicator, View } from "react-native";
+import { ThemeProvider } from "../context/ThemeContext";
+import { initDB } from "../database/db";
+import { useThemeColors } from "../theme";
 
-export default function Layout() {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-
-  const router = useRouter();
+function InnerLayout() {
+  const colors = useThemeColors();
 
   return (
     <Stack
       screenOptions={{
-        headerLargeTitle: true, // iOS large title style
+        headerLargeTitle: true,
         headerLargeTitleShadowVisible: false,
-        headerStyle: { backgroundColor: isDark ? "#000" : "#fefefe" },
-        headerTitleStyle: { color: isDark ? "#fff" : "#000" },
-        headerTintColor: isDark ? "#fff" : "#000",
+        headerStyle: { backgroundColor: colors.background },
+        headerTitleStyle: { color: colors.text },
+        headerTintColor: colors.text,
       }}
     >
-      <Stack.Screen
-        name="index"
-        options={{
-          title: "Folders",
-          headerRight: () => (
-            <Pressable
-              style={{
-                marginRight: 20,
-                // marginTop: 15,
-                padding: 10,
-              }}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              onPress={() => router.push("/settings")}
-            >
-              <Ionicons
-                name="settings-outline"
-                size={28}
-                color={isDark ? "#fff" : "#000"}
-              />
-            </Pressable>
-          ),
-        }}
-      />
+      <Stack.Screen name="index" options={{ title: "Folders" }} />
       <Stack.Screen name="notes-page" options={{ title: "Notes" }} />
       <Stack.Screen name="note-editor" options={{ title: "New Note" }} />
       <Stack.Screen name="settings" options={{ title: "Settings" }} />
       <Stack.Screen
         name="folder-modal"
-        options={{
-          presentation: "modal",
-          title: "",
-        }}
+        options={{ presentation: "modal", title: "" }}
       />
     </Stack>
+  );
+}
+
+export default function Layout() {
+  const [dbReady, setDbReady] = useState(false);
+
+  useEffect(() => {
+    async function prepareDB() {
+      try {
+        await initDB(); // ✅ wait for migrations
+        setDbReady(true);
+      } catch (e) {
+        console.error("DB init failed", e);
+      }
+    }
+    prepareDB();
+  }, []);
+
+  if (!dbReady) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  return (
+    <ThemeProvider>
+      <InnerLayout />
+    </ThemeProvider>
   );
 }

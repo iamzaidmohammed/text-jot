@@ -2,12 +2,21 @@ import { useRouter } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useThemeColors } from "../theme";
 
-export default function NotesItem({ title, preview, date }) {
+export default function NotesItem({ id, folderId, title, preview, date }) {
   const router = useRouter();
   const colors = useThemeColors();
 
   return (
-    <Pressable onPress={() => router.push("/note-editor")}>
+    <Pressable
+      onPress={
+        () =>
+          router.push({
+            pathname: `/note-editor?noteId=${id}&folderId=${folderId}`,
+            // params: { noteId: id, folderId: folderId },
+          })
+        // console.log(id)
+      }
+    >
       <View style={styles.item}>
         <View style={{ flex: 1 }}>
           <Text

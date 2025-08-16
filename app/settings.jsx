@@ -1,7 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
+  ActionSheetIOS,
   Alert,
+  Platform,
   SectionList,
   StyleSheet,
   Switch,
@@ -9,29 +11,65 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useTheme } from "../context/ThemeContext";
+import { clearFolders } from "../database/queries";
 import { useThemeColors } from "../theme";
 
 export default function SettingsScreen() {
   const colors = useThemeColors();
 
   // State for toggles and selections
-  const [theme, setTheme] = useState("system");
+  const { theme, setTheme } = useTheme();
   const [fontSize, setFontSize] = useState("medium");
   const [sortOrder, setSortOrder] = useState("dateEdited");
-  const [previewLines, setPreviewLines] = useState(2);
-  const [groupByFolder, setGroupByFolder] = useState(true);
 
+  // --- Handlers ---
   const handleExport = () => Alert.alert("Export", "Exporting notes...");
   const handleImport = () => Alert.alert("Import", "Importing notes...");
-  const handleClear = () =>
-    Alert.alert("Clear All Notes", "This action cannot be undone.", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Clear",
-        style: "destructive",
-        onPress: () => console.log("Cleared"),
-      },
-    ]);
+
+  const handleClearFolders = () =>
+    Alert.alert(
+      "Clear All Folders",
+      "This will delete all folders and notes. This action cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Clear",
+          style: "destructive",
+          onPress: async () => {
+            await clearFolders();
+            console.log("All folders and notes cleared");
+          },
+        },
+      ]
+    );
+
+  const openPicker = (title, options, selected, onSelect) => {
+    if (Platform.OS === "ios") {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: [...options, "Cancel"],
+          cancelButtonIndex: options.length,
+          title,
+        },
+        (index) => {
+          if (index < options.length) {
+            onSelect(options[index]);
+          }
+        }
+      );
+    } else {
+      // Simple fallback for Android
+      Alert.alert(
+        title,
+        null,
+        options.map((opt) => ({
+          text: opt,
+          onPress: () => onSelect(opt),
+        }))
+      );
+    }
+  };
 
   const sections = [
     {
@@ -39,11 +77,23 @@ export default function SettingsScreen() {
       data: [
         {
           label: `Theme: ${theme}`,
-          onPress: () => console.log("Change theme"),
+          onPress: () =>
+            openPicker(
+              "Select Theme",
+              ["system", "light", "dark"],
+              theme,
+              setTheme
+            ),
         },
         {
           label: `Font Size: ${fontSize}`,
-          onPress: () => console.log("Change font size"),
+          onPress: () =>
+            openPicker(
+              "Select Font Size",
+              ["small", "medium", "large"],
+              fontSize,
+              setFontSize
+            ),
         },
       ],
     },
@@ -52,17 +102,13 @@ export default function SettingsScreen() {
       data: [
         {
           label: `Sort Notes By: ${sortOrder}`,
-          onPress: () => console.log("Change sort"),
-        },
-        {
-          label: `Note Preview Lines: ${previewLines}`,
-          onPress: () => console.log("Change preview lines"),
-        },
-        {
-          label: "Group Notes by Folder",
-          type: "switch",
-          value: groupByFolder,
-          onValueChange: setGroupByFolder,
+          onPress: () =>
+            openPicker(
+              "Sort Notes By",
+              ["dateEdited", "dateCreated", "title"],
+              sortOrder,
+              setSortOrder
+            ),
         },
       ],
     },
@@ -71,17 +117,21 @@ export default function SettingsScreen() {
       data: [
         { label: "Export Notes", onPress: handleExport },
         { label: "Import Notes", onPress: handleImport },
-        { label: "Clear All Notes", onPress: handleClear, danger: true },
+        { label: "Clear All Notes", onPress: handleClearFolders, danger: true },
       ],
     },
     {
       title: "About",
       data: [
         { label: "App Version: 1.0.0" },
-        { label: "About TextJot", onPress: () => console.log("Show about") },
+        {
+          label: "About TextJot",
+          onPress: () => Alert.alert("About", "TextJot – a simple notes app."),
+        },
         {
           label: "Visit Project Page",
-          onPress: () => console.log("Open link"),
+          onPress: () =>
+            Alert.alert("Open Link", "Would open GitHub/project page"),
         },
       ],
     },

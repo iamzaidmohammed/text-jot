@@ -1,6 +1,7 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { addFolder } from "../database/queries";
 import { useThemeColors } from "../theme";
 
 export default function FolderModal() {
@@ -8,12 +9,13 @@ export default function FolderModal() {
   const router = useRouter();
   const [folderName, setFolderName] = useState("");
 
-  const handleSave = () => {
-    if (folderName.trim() === "") return;
-    // ✅ For now, we just log it — will integrate with SQLite later
-    console.log("New folder created:", folderName);
-    router.back(); // close modal
-  };
+  async function createFolder() {
+    if (folderName !== "") {
+      await addFolder(folderName);
+      setFolderName("");
+      router.back();
+    }
+  }
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -35,7 +37,8 @@ export default function FolderModal() {
         </Pressable>
         <Pressable
           style={[styles.button, { backgroundColor: colors.primary }]}
-          onPress={handleSave}
+          onPress={createFolder}
+          disabled={folderName === ""}
         >
           <Text style={[styles.buttonText, { color: "#fff" }]}>Save</Text>
         </Pressable>
