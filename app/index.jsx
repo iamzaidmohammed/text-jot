@@ -14,6 +14,7 @@ export default function FoldersScreen() {
   const router = useRouter();
 
   const [folders, setFolders] = useState([]);
+  const [allFolders, setAllFolders] = useState([]);
 
   useFocusEffect(
     useCallback(() => {
@@ -25,10 +26,23 @@ export default function FoldersScreen() {
     try {
       const data = await getFolders();
       setFolders(data);
+      setAllFolders(data);
     } catch (error) {
       console.error("Error loading folders:", error);
     }
   }
+
+  const searchFolder = (text) => {
+    const q = (text || "").trim().toLowerCase();
+    if (q.length > 0) {
+      const filteredFolders = allFolders.filter((folder) => {
+        return folder.name.toLowerCase().includes(q);
+      });
+      setFolders(filteredFolders);
+    } else {
+      setFolders(allFolders);
+    }
+  };
 
   return (
     <>
@@ -48,7 +62,7 @@ export default function FoldersScreen() {
         }}
       />
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <SearchBar placeholder="Search folders" />
+        <SearchBar placeholder="Search folders" onChangeText={searchFolder} />
         {folders.length < 1 ? (
           <Text
             style={{ color: colors.text, textAlign: "center", marginTop: 20 }}
@@ -58,7 +72,7 @@ export default function FoldersScreen() {
         ) : (
           <FlatList
             data={folders}
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item) => item.id?.toString()}
             renderItem={({ item }) => (
               <FolderItem id={item.id} name={item.name} count={item.count} />
             )}

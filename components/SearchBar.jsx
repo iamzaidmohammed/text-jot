@@ -6,12 +6,7 @@ export default function SearchBar({ value, onChangeText, placeholder }) {
   const colors = useThemeColors();
 
   return (
-    <View
-      style={[
-        styles.container,
-        { backgroundColor: colors.bg, paddingHorizontal: 20 },
-      ]}
-    >
+    <View style={[styles.container, { backgroundColor: colors.bg }]}>
       <Ionicons
         name="search-outline"
         size={20}
@@ -33,9 +28,12 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
+    borderWidth: 1,
     borderRadius: 10,
-    paddingHorizontal: 10,
+    marginHorizontal: 20,
     paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderColor: "#888",
     marginVertical: 10,
   },
   icon: {

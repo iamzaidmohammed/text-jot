@@ -14,12 +14,14 @@ export default function NotesScreen() {
   const router = useRouter();
   const { folderId } = useLocalSearchParams();
   const [notes, setNotes] = useState([]);
+  const [allNotes, setAllNotes] = useState([]);
 
   const loadNotes = useCallback(async () => {
     if (!folderId) return;
     try {
       const result = await getNotes(folderId);
       setNotes(result);
+      setAllNotes(result);
     } catch (error) {
       console.error("Error loading notes:", error);
     }
@@ -30,6 +32,21 @@ export default function NotesScreen() {
       loadNotes();
     }, [loadNotes])
   );
+
+  const searchNotes = (text) => {
+    const q = (text || "").trim().toLowerCase();
+    if (q.length > 0) {
+      const filteredNotes = allNotes.filter((note) => {
+        return (
+          (note.title || "").toLowerCase().includes(q) ||
+          (note.body || "").toLowerCase().includes(q)
+        );
+      });
+      setNotes(filteredNotes);
+    } else {
+      setNotes(allNotes);
+    }
+  };
 
   return (
     <>
@@ -49,17 +66,17 @@ export default function NotesScreen() {
         }}
       />
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <SearchBar placeholder="Search notes..." />
+        <SearchBar placeholder="Search notes..." onChangeText={searchNotes} />
         {notes.length < 1 ? (
           <Text
             style={{ color: colors.text, textAlign: "center", marginTop: 20 }}
           >
-            No notes found in this {folderId}. Create one to get started!
+            No notes found in this folder. Create one to get started!
           </Text>
         ) : (
           <FlatList
             data={notes}
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item) => item.id?.toString()}
             renderItem={({ item }) => (
               <NotesItem
                 id={item.id}
