@@ -1,3 +1,4 @@
+// pages/notes-page.jsx (NotesScreen)
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
@@ -36,12 +37,11 @@ export default function NotesScreen() {
   const searchNotes = (text) => {
     const q = (text || "").trim().toLowerCase();
     if (q.length > 0) {
-      const filteredNotes = allNotes.filter((note) => {
-        return (
+      const filteredNotes = allNotes.filter(
+        (note) =>
           (note.title || "").toLowerCase().includes(q) ||
           (note.body || "").toLowerCase().includes(q)
-        );
-      });
+      );
       setNotes(filteredNotes);
     } else {
       setNotes(allNotes);
@@ -55,10 +55,7 @@ export default function NotesScreen() {
           headerRight: () => (
             <Pressable
               onPress={() => router.push("/settings")}
-              style={{
-                marginRight: 20,
-                marginTop: 15,
-              }}
+              style={{ marginRight: 20, marginTop: 15 }}
             >
               <Ionicons name="settings-outline" size={28} color={colors.text} />
             </Pressable>
@@ -84,12 +81,12 @@ export default function NotesScreen() {
                 preview={item.body}
                 folderId={folderId}
                 date={new Date(item.date_edited).toLocaleDateString()}
+                onRefresh={loadNotes} // ✅ refresh after delete
               />
             )}
             contentContainerStyle={{ paddingHorizontal: 20 }}
           />
         )}
-
         <FloatingButton
           icon="create-outline"
           navigateTo={`/note-editor?folderId=${folderId}`}

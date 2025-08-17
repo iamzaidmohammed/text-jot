@@ -25,10 +25,22 @@ export async function addFolder(name) {
 
 export async function clearFolders() {
   const database = await db;
-  // Delete all notes first (to avoid orphaned records)
   await database.execAsync("DELETE FROM notes;");
-  // Then delete all folders
   await database.execAsync("DELETE FROM folders;");
+}
+
+export async function renameFolder(id, newName) {
+  const database = await db;
+  await database.runAsync("UPDATE folders SET name = ? WHERE id = ?", [
+    newName,
+    id,
+  ]);
+}
+
+export async function deleteFolder(id) {
+  const database = await db;
+  await database.runAsync("DELETE FROM notes WHERE folder_id = ?;", [id]);
+  await database.runAsync("DELETE FROM folders WHERE id = ?;", [id]);
 }
 
 // --- Notes ---

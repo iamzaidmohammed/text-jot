@@ -1,3 +1,4 @@
+// pages/index.jsx (FoldersScreen)
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { Stack, useRouter } from "expo-router";
@@ -16,13 +17,7 @@ export default function FoldersScreen() {
   const [folders, setFolders] = useState([]);
   const [allFolders, setAllFolders] = useState([]);
 
-  useFocusEffect(
-    useCallback(() => {
-      loadFolders();
-    }, [])
-  );
-
-  async function loadFolders() {
+  const loadFolders = useCallback(async () => {
     try {
       const data = await getFolders();
       setFolders(data);
@@ -30,14 +25,20 @@ export default function FoldersScreen() {
     } catch (error) {
       console.error("Error loading folders:", error);
     }
-  }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadFolders();
+    }, [loadFolders])
+  );
 
   const searchFolder = (text) => {
     const q = (text || "").trim().toLowerCase();
     if (q.length > 0) {
-      const filteredFolders = allFolders.filter((folder) => {
-        return folder.name.toLowerCase().includes(q);
-      });
+      const filteredFolders = allFolders.filter((folder) =>
+        folder.name.toLowerCase().includes(q)
+      );
       setFolders(filteredFolders);
     } else {
       setFolders(allFolders);
@@ -50,10 +51,7 @@ export default function FoldersScreen() {
         options={{
           headerRight: () => (
             <Pressable
-              style={{
-                marginRight: 20,
-                marginTop: 15,
-              }}
+              style={{ marginRight: 20, marginTop: 15 }}
               onPress={() => router.push("/settings")}
             >
               <Ionicons name="settings-outline" size={28} color={colors.text} />
@@ -74,7 +72,12 @@ export default function FoldersScreen() {
             data={folders}
             keyExtractor={(item) => item.id?.toString()}
             renderItem={({ item }) => (
-              <FolderItem id={item.id} name={item.name} count={item.count} />
+              <FolderItem
+                id={item.id}
+                name={item.name}
+                count={item.count}
+                onRefresh={loadFolders}
+              />
             )}
             contentInsetAdjustmentBehavior="automatic"
             contentContainerStyle={{ paddingHorizontal: 20 }}
